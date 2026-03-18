@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magyar Politika Idle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0e0e12;
+  --surface: #16161d;
+  --surface2: #1e1e28;
+  --border: #2a2a3a;
+  --red: #ce2939;
+  --green: #3a7d44;
+  --white: #e8e8e8;
+  --muted: #6b6b80;
+  --accent: #f0c040;
+  --text: #d0d0d8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* HEADER */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.flag {
+  display: flex;
+  flex-direction: column;
+  width: 32px;
+  height: 22px;
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.flag span { flex: 1; }
+.flag .f1 { background: #ce2939; }
+.flag .f2 { background: #fff; }
+.flag .f3 { background: #3a7d44; }
+
+header h1 {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.05em;
+}
+header h1 span { color: var(--accent); }
+
+.header-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 24px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.stat-item { text-align: right; }
+.stat-label { color: var(--muted); font-size: 11px; }
+.stat-val { color: var(--accent); font-weight: 600; }
+
+/* NEWS TICKER */
+.ticker-wrap {
+  background: var(--red);
+  padding: 4px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #fff;
+}
+.ticker-inner {
+  display: inline-block;
+  animation: ticker 60s linear infinite;
+}
+@keyframes ticker {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(-100%); }
+}
+
+/* LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 280px;
+  gap: 0;
+  min-height: calc(100vh - 80px);
+}
+
+/* PANEL SHARED */
+.panel {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: calc(100vh - 80px);
+}
+.panel:last-child { border-right: none; }
+
+.panel-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 10;
+}
+
+/* LEFT PANEL - CLICK */
+.left-panel {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  gap: 20px;
+}
+
+.party-name-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 6px 10px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.party-name-input:focus { border-color: var(--accent); }
+
+.clicker-btn {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #2a2a3a, #0e0e12);
+  border: 3px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.08s, border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.clicker-btn:hover { border-color: var(--accent); }
+.clicker-btn:active { transform: scale(0.96); }
+.clicker-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(240,192,64,0.08) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.clicker-btn:hover::after { opacity: 1; }
+
+.clicker-icon { font-size: 48px; pointer-events: none; }
+.clicker-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  pointer-events: none;
+}
+
+.votes-big {
+  text-align: center;
+  font-family: var(--mono);
+}
+.votes-num {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.votes-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.milestone-box {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.milestone-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.milestone-title {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.milestone-bar-wrap {
+  background: var(--border);
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.milestone-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.floats-container {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999;
+  left: 0; top: 0;
+}
+.float-text {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  pointer-events: none;
+  animation: floatUp 0.9s ease-out forwards;
+}
+@keyframes floatUp {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-60px); }
+}
+
+/* MIDDLE PANEL - BUILDINGS */
+.mid-panel {
+  background: var(--bg);
+  padding: 0;
+}
+
+.building-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.building-row:hover { background: var(--surface2); }
+.building-row.disabled { opacity: 0.4; cursor: not-allowed; }
+.building-row.disabled:hover { background: transparent; }
+
+.building-icon { font-size: 26px; text-align: center; }
+.building-info { min-width: 0; }
+.building-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+}
+.building-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.building-cost {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  text-align: right;
+  white-space: nowrap;
+}
+.building-owned {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 2px;
+}
+
+.building-row.can-buy .building-name { color: var(--accent); }
+.building-row.can-buy { background: rgba(240,192,64,0.04); }
+
+/* RIGHT PANEL - UPGRADES / EVENTS */
+.right-panel {
+  background: var(--surface);
+}
+
+.upgrade-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.upgrade-item:hover { background: var(--surface2); }
+.upgrade-item.disabled { opacity: 0.35; cursor: not-allowed; }
+.upgrade-item.disabled:hover { background: transparent; }
+.upgrade-item.bought { opacity: 0.45; cursor: default; pointer-events: none; }
+.upgrade-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.upgrade-info { flex: 1; min-width: 0; }
+.upgrade-name { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--white); }
+.upgrade-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.upgrade-cost { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-top: 3px; }
+.upgrade-item.can-buy .upgrade-name { color: var(--accent); }
+
+.section-divider {
+  padding: 8px 14px 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.event-item {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.event-item .ev-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #3a3a4a;
+  margin-bottom: 2px;
+}
+.event-item.good { border-left: 2px solid var(--green); }
+.event-item.bad { border-left: 2px solid var(--red); }
+.event-item.neutral { border-left: 2px solid var(--border); }
+
+.achievements-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ach-badge {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.ach-badge.unlocked {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(240,192,64,0.08);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* TOOLTIP */
+.tooltip {
+  position: fixed;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text);
+  pointer-events: none;
+  z-index: 9999;
+  max-width: 220px;
+  line-height: 1.5;
+  display: none;
+}
+.tooltip.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="flag"><span class="f1"></span><span class="f2"></span><span class="f3"></span></div>
+  <h1>Magyar Politika <span>IDLE</span></h1>
+  <div class="header-stats">
+    <div class="stat-item">
+      <div class="stat-label">SZAVAZAT / MPS</div>
+      <div class="stat-val" id="h-vps">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">ÖSSZES SZAVAZAT</div>
+      <div class="stat-val" id="h-total">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">IDŐ</div>
+      <div class="stat-val" id="h-time">0:00</div>
+    </div>
+  </div>
+</header>
+
+<div class="ticker-wrap">
+  <span class="ticker-inner" id="ticker-inner">Töltés...</span>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: CLICKER -->
+  <div class="panel left-panel">
+    <input class="party-name-input" id="party-name" type="text" value="Magyar Győzelem Pártja" maxlength="32" title="Nevezd el a pártod!">
+
+    <div class="votes-big">
+      <div class="votes-num" id="votes-display">0</div>
+      <div class="votes-sub">szavazat</div>
+      <div class="votes-sub" id="vps-display" style="margin-top:4px; color: var(--accent)">0 szavazat/mp</div>
+    </div>
+
+    <button class="clicker-btn" id="clicker" onclick="doClick(event)">
+      <span class="clicker-icon">🤝</span>
+      <span class="clicker-label">Kezet fog<br>a választóval</span>
+    </button>
+
+    <div class="milestone-box">
+      <div class="milestone-label">JELENLEGI TITULUS</div>
+      <div class="milestone-title" id="ms-title">Ismeretlen aktivista</div>
+      <div class="milestone-bar-wrap">
+        <div class="milestone-bar" id="ms-bar" style="width:0%"></div>
+      </div>
+      <div class="votes-sub" id="ms-next" style="margin-top:5px; color:var(--muted); font-size:11px">Következő: 100 szavazat</div>
+    </div>
+
+    <div id="achievements-area" class="achievements-bar" style="width:100%; border:1px solid var(--border); border-radius:6px; padding:10px;">
+      <div class="milestone-label" style="width:100%; margin-bottom:4px;">EREDMÉNYEK</div>
+    </div>
+  </div>
+
+  <!-- MIDDLE: BUILDINGS -->
+  <div class="panel mid-panel">
+    <div class="panel-title">🏗 Kampányinfrastruktúra</div>
+    <div id="buildings-list"></div>
+  </div>
+
+  <!-- RIGHT: UPGRADES + EVENTS -->
+  <div class="panel right-panel">
+    <div class="panel-title">⬆ Fejlesztések</div>
+    <div id="upgrades-list"></div>
+    <div class="section-divider">📰 Hírek</div>
+    <div id="events-list"></div>
+  </div>
+
+</div>
+
+<div class="floats-container" id="floats"></div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ===================== GAME DATA =====================
+
+const BUILDINGS = [
+  { id:'poster',    icon:'📋', name:'Plakátragasztó',        desc:'Éjjel-nappal ragaszt', base:10,    vps:0.1,  flavorPre:'Valaki', flavorPost:'plakátot ragasztott.' },
+  { id:'bus',       icon:'🚌', name:'Kampánybusz',           desc:'Falvakat jár be',      base:100,   vps:0.5,  flavorPre:'A busz', flavorPost:'megérkezett.' },
+  { id:'press',     icon:'🎙', name:'Sajtótájékoztató',      desc:'Nem kell kérdés',      base:500,   vps:4,    flavorPre:'Sajtó', flavorPost:'tájékoztattak mindenkit.' },
+  { id:'tvspot',    icon:'📺', name:'TV-spot',               desc:'Ismétlés, ismétlés',   base:2000,  vps:20,   flavorPre:'Láttak', flavorPost:'egy TV-spotot.' },
+  { id:'media',     icon:'📡', name:'Kormányközeli médium',  desc:'Tények? Mi az?',       base:10000, vps:100,  flavorPre:'Az igazság', flavorPost:'kiderült.' },
+  { id:'stadium',   icon:'🏟', name:'Stadionépítés',         desc:'Örökség marad',        base:50000, vps:500,  flavorPre:'Átadták', flavorPost:'az új stadiont.' },
+  { id:'eu',        icon:'🇪🇺', name:'EU-s pénzek',           desc:'Brüsszeltől',          base:200000,vps:2500, flavorPre:'Érkezett', flavorPost:'némi forrás.' },
+  { id:'constit',   icon:'📜', name:'Alkotmánymódosítás',   desc:'Két perces szavazás',  base:1000000,vps:12000,flavorPre:'Megszavazták', flavorPost:'a módosítást.' },
+  { id:'nat',       icon:'🦅', name:'Nemzeti Konzultáció',  desc:'Kérdés már van',       base:5000000,vps:60000,flavorPre:'Beérkezett', flavorPost:'egy névtelen ív.' },
+];
+
+const UPGRADES = [
+  { id:'u1',  bld:'poster',  mult:2,  name:'Foszforeszkáló plakát', desc:'Sötétben is látszik', cost:100,  icon:'✨' },
+  { id:'u2',  bld:'bus',     mult:2,  name:'Dupla­decker busz',     desc:'Kétszer annyi ember',  cost:500,  icon:'🚌' },
+  { id:'u3',  bld:'poster',  mult:2,  name:'Időjárásálló ragasztó', desc:'Eső sem mossa le',     cost:1000, icon:'🌧' },
+  { id:'u4',  bld:'press',   mult:2,  name:'Szónoki állvány',       desc:'Tekintélyesebb megjelenés', cost:2000, icon:'🎤' },
+  { id:'u5',  bld:'bus',     mult:2,  name:'Kifőzde a buszon',      desc:'Lángos menet közben',  cost:5000, icon:'🥙' },
+  { id:'u6',  bld:'tvspot',  mult:2,  name:'Primetime spot',        desc:'Mindenki nézi',        cost:10000,icon:'⭐' },
+  { id:'u7',  bld:'media',   mult:2,  name:'Hatodik csatorna',      desc:'Csak a mi hangunk',    cost:40000,icon:'📻' },
+  { id:'u8',  bld:'press',   mult:2,  name:'Kérdés nélküli sajtó', desc:'Csak közlemény van',   cost:25000,icon:'🚫' },
+  { id:'u9',  bld:'stadium', mult:2,  name:'Névadói jog',           desc:'Mindenki tudja',       cost:150000,icon:'💰' },
+  { id:'u10', bld:'eu',      mult:2,  name:'Kohéziós alap',         desc:'Plusz csatorna',       cost:500000,icon:'💶' },
+  { id:'u11', bld:'constit', mult:2,  name:'Sarkalatos törvény',    desc:'Kétharmad kellene',    cost:2000000,icon:'⚖' },
+  { id:'u12', bld:'nat',     mult:2,  name:'Kérdések kérdése',      desc:'Mit kérdezzünk?',      cost:10000000,icon:'❓' },
+  { id:'u13', bld:null,      mult:2,  name:'Össznépi összefogás',   desc:'Mindenki kettőt kattint', cost:50, icon:'👐', clickMult:true },
+  { id:'u14', bld:null,      mult:5,  name:'Parlamenti napidíj',    desc:'Ötszörös szavazat kézfogásonként', cost:2000, icon:'💼', clickMult:true },
+  { id:'u15', bld:null,      mult:2,  name:'Selfie a néppel',       desc:'Viral lett',           cost:200, icon:'🤳', clickMult:true },
+];
+
+const MILESTONES = [
+  { votes:0,        title:'Ismeretlen aktivista' },
+  { votes:100,      title:'Falusi képviselő' },
+  { votes:1000,     title:'Kerületi politikus' },
+  { votes:10000,    title:'Parlamenti képviselő' },
+  { votes:100000,   title:'Frakcióvezető' },
+  { votes:1000000,  title:'Miniszter' },
+  { votes:10000000, title:'Miniszterelnök' },
+  { votes:50000000, title:'Kétharmados győztes' },
+  { votes:200000000,title:'Örök kétharmad' },
+  { votes:1e9,      title:'Alapító atya' },
+];
+
+const ACHIEVEMENTS = [
+  { id:'a1', label:'Első kézfogás', cond: s => s.totalClicks >= 1 },
+  { id:'a2', label:'100 kézfogás',  cond: s => s.totalClicks >= 100 },
+  { id:'a3', label:'Első plakát',   cond: s => (s.owned.poster||0) >= 1 },
+  { id:'a4', label:'Kampánybusz',   cond: s => (s.owned.bus||0) >= 1 },
+  { id:'a5', label:'Milliomos',     cond: s => s.totalVotes >= 1000000 },
+  { id:'a6', label:'TV-szereplő',   cond: s => (s.owned.tvspot||0) >= 1 },
+  { id:'a7', label:'Stadionfoglaló',cond: s => (s.owned.stadium||0) >= 1 },
+  { id:'a8', label:'Kétharmad!',    cond: s => s.totalVotes >= 50000000 },
+];
+
+const NEWS = [
+  { type:'bad',     text:'Az ellenzék összefog. Aztán szétesik.' },
+  { type:'neutral', text:'Orbán: „A Soros-terv veszélyezteti a plakátjainkat."' },
+  { type:'good',    text:'Brüsszel megint beavatkozik a belviszonyainkba.' },
+  { type:'neutral', text:'DK: „Mi vagyunk az igazi ellenzék." Momentum: „Nem, mi."' },
+  { type:'bad',     text:'A kérdőívek 94%-a visszaérkezett. A kérdések ismeretlenek.' },
+  { type:'good',    text:'Felavatták az ötödik stadiont. A focipálya hamarosan épül.' },
+  { type:'neutral', text:'Fidesz: „Ez megint Brüsszel." Brüsszel: ???' },
+  { type:'bad',     text:'MSZP frakcióülés: öten vannak, három frakció.' },
+  { type:'good',    text:'Közmédia: „Tárgyilagos tájékoztatás, mint mindig."' },
+  { type:'neutral', text:'Momentum: „Eljön a változás." (2014-óta)' },
+  { type:'bad',     text:'Az alkotmánymódosítást 7 perc alatt szavazták meg.' },
+  { type:'good',    text:'Paks II. hamarosan kész. A tervek szerint 2043-ban.' },
+  { type:'neutral', text:'Ellenzéki összefogás: 12 párt, 11 elnök, 0 program.' },
+  { type:'bad',     text:'EU-s pénz érkezett. Elköltötték. Auditorok keresik.' },
+  { type:'good',    text:'Karácsony: „Jövőre meglesz a főváros." Jövőre megint jövőre.' },
+  { type:'neutral', text:'Közvélemény-kutatás: 40%-os támogatás minden párt mérése szerint.' },
+  { type:'bad',     text:'Jogállamisági eljárás indul. Mi: „Irigység."' },
+  { type:'good',    text:'Magyar siker: egy kézilabdás nyert valamit valahol.' },
+  { type:'neutral', text:'Sajtótájékoztató kérdések nélkül. Válaszok kérdések nélkül.' },
+  { type:'bad',     text:'A főpolgármester elmondja, mit tesz, ha… Budapest nem engedi.' },
+];
+
+// ===================== GAME STATE =====================
+let state = {
+  votes: 0,
+  totalVotes: 0,
+  vps: 0,
+  clickPower: 1,
+  owned: {},
+  boughtUpgrades: new Set(),
+  boughtAchievements: new Set(),
+  totalClicks: 0,
+  startTime: Date.now(),
+  events: [],
+};
+
+const bldMultipliers = {};
+BUILDINGS.forEach(b => bldMultipliers[b.id] = 1);
+
+function fmt(n) {
+  if (n < 1000) return Math.floor(n).toString();
+  if (n < 1e6) return (n/1000).toFixed(1).replace('.0','') + 'E';
+  if (n < 1e9) return (n/1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  if (n < 1e12) return (n/1e9).toFixed(2).replace(/\.?0+$/, '') + 'Mrd';
+  return (n/1e12).toFixed(2) + 'T';
+}
+
+function calcVps() {
+  let total = 0;
+  BUILDINGS.forEach(b => {
+    const cnt = state.owned[b.id] || 0;
+    total += cnt * b.vps * bldMultipliers[b.id];
+  });
+  state.vps = total;
+}
+
+function bldCost(b, n) {
+  const owned = state.owned[b.id] || 0;
+  return Math.floor(b.base * Math.pow(1.15, owned + n));
+}
+
+function doClick(ev) {
+  const gain = state.clickPower;
+  state.votes += gain;
+  state.totalVotes += gain;
+  state.totalClicks++;
+
+  // float text
+  const floats = document.getElementById('floats');
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = '+' + fmt(gain) + ' 🗳';
+  el.style.left = (ev.clientX - 20) + 'px';
+  el.style.top = (ev.clientY - 10) + 'px';
+  floats.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+
+  renderAll();
+}
+
+// ===================== RENDER =====================
+// Full rebuild: only on purchase / upgrade / init
+function renderAll() {
+  renderStats();
+  renderMilestone();
+  renderBuildings();
+  renderUpgrades();
+  renderAchievements();
+}
+
+// Lightweight tick: only update numbers + affordability classes, never rebuild DOM
+function renderTick() {
+  renderStats();
+  renderMilestone();
+  updateAffordability();
+}
+
+function updateAffordability() {
+  // buildings
+  document.querySelectorAll('#buildings-list .building-row').forEach((row, i) => {
+    const b = BUILDINGS[i];
+    if (!b) return;
+    const cost = bldCost(b, 0);
+    const canBuy = state.votes >= cost;
+    row.classList.toggle('can-buy', canBuy);
+    row.classList.toggle('disabled', !canBuy);
+    // update cost + owned display (these change as votes tick up, cost changes after buy)
+    const costEl = row.querySelector('.building-cost');
+    if (costEl) costEl.textContent = '🗳 ' + fmt(cost);
+  });
+  // upgrades
+  document.querySelectorAll('#upgrades-list .upgrade-item').forEach((item, i) => {
+    const u = UPGRADES[i];
+    if (!u) return;
+    const bought = state.boughtUpgrades.has(u.id);
+    const canBuy = !bought && state.votes >= u.cost;
+    item.classList.toggle('can-buy', canBuy && !bought);
+    item.classList.toggle('disabled', !canBuy && !bought);
+  });
+}
+
+function renderStats() {
+  document.getElementById('votes-display').textContent = fmt(state.votes);
+  document.getElementById('vps-display').textContent = fmt(state.vps) + ' szavazat/mp';
+  document.getElementById('h-vps').textContent = fmt(state.vps) + '/mp';
+  document.getElementById('h-total').textContent = fmt(state.totalVotes);
+  const sec = Math.floor((Date.now() - state.startTime) / 1000);
+  document.getElementById('h-time').textContent = Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+}
+
+function renderMilestone() {
+  let cur = MILESTONES[0], nxt = MILESTONES[1];
+  for (let i = 0; i < MILESTONES.length; i++) {
+    if (state.totalVotes >= MILESTONES[i].votes) {
+      cur = MILESTONES[i];
+      nxt = MILESTONES[i+1] || null;
+    }
+  }
+  document.getElementById('ms-title').textContent = cur.title;
+  if (nxt) {
+    const pct = Math.min(100, ((state.totalVotes - cur.votes) / (nxt.votes - cur.votes)) * 100);
+    document.getElementById('ms-bar').style.width = pct + '%';
+    document.getElementById('ms-next').textContent = 'Következő: ' + fmt(nxt.votes) + ' szavazat → ' + nxt.title;
+  } else {
+    document.getElementById('ms-bar').style.width = '100%';
+    document.getElementById('ms-next').textContent = 'Maximum elérve!';
+  }
+}
+
+function renderBuildings() {
+  const list = document.getElementById('buildings-list');
+  list.innerHTML = '';
+  BUILDINGS.forEach(b => {
+    const owned = state.owned[b.id] || 0;
+    const cost = bldCost(b, 0);
+    const canBuy = state.votes >= cost;
+    const row = document.createElement('div');
+    row.className = 'building-row' + (canBuy ? ' can-buy' : ' disabled');
+    row.innerHTML = `
+      <div class="building-icon">${b.icon}</div>
+      <div class="building-info">
+        <div class="building-name">${b.name}</div>
+        <div class="building-desc">${b.desc} • +${fmt(b.vps * bldMultipliers[b.id])}/mp db</div>
+      </div>
+      <div>
+        <div class="building-cost">🗳 ${fmt(cost)}</div>
+        <div class="building-owned">Van: ${owned}</div>
+      </div>
+    `;
+    if (canBuy) {
+      row.addEventListener('click', () => {
+        const c = bldCost(b, 0);
+        if (state.votes >= c) {
+          state.votes -= c;
+          state.owned[b.id] = (state.owned[b.id] || 0) + 1;
+          calcVps();
+          addEvent(b.flavorPre + ' ' + b.flavorPost + ' (' + b.name + ')');
+          renderAll();
+        }
+      });
+    }
+    list.appendChild(row);
+  });
+}
+
+function renderUpgrades() {
+  const list = document.getElementById('upgrades-list');
+  list.innerHTML = '';
+  UPGRADES.forEach(u => {
+    const bought = state.boughtUpgrades.has(u.id);
+    const canBuy = !bought && state.votes >= u.cost;
+    const item = document.createElement('div');
+    item.className = 'upgrade-item' + (bought ? ' bought' : canBuy ? ' can-buy' : ' disabled');
+    item.innerHTML = `
+      <div class="upgrade-icon">${u.icon}</div>
+      <div class="upgrade-info">
+        <div class="upgrade-name">${bought ? '✓ ' : ''}${u.name}</div>
+        <div class="upgrade-desc">${u.desc}${u.bld ? ' • ' + u.mult + 'x ' + BUILDINGS.find(b=>b.id===u.bld)?.name : ' • ' + u.mult + 'x kattintás'}</div>
+        ${!bought ? `<div class="upgrade-cost">🗳 ${fmt(u.cost)}</div>` : ''}
+      </div>
+    `;
+    if (canBuy) {
+      item.addEventListener('click', () => {
+        if (state.votes >= u.cost && !state.boughtUpgrades.has(u.id)) {
+          state.votes -= u.cost;
+          state.boughtUpgrades.add(u.id);
+          if (u.clickMult) {
+            state.clickPower *= u.mult;
+          } else if (u.bld) {
+            bldMultipliers[u.bld] *= u.mult;
+          }
+          calcVps();
+          addEvent('Fejlesztés megvásárolva: ' + u.name, 'good');
+          renderAll();
+        }
+      });
+    }
+    list.appendChild(item);
+  });
+}
+
+function renderAchievements() {
+  const area = document.getElementById('achievements-area');
+  const existing = area.querySelectorAll('.ach-badge');
+  existing.forEach(e => e.remove());
+  ACHIEVEMENTS.forEach(a => {
+    const unlocked = state.boughtAchievements.has(a.id) || a.cond(state);
+    if (unlocked && !state.boughtAchievements.has(a.id)) {
+      state.boughtAchievements.add(a.id);
+      addEvent('Eredmény: ' + a.label + ' 🏅', 'good');
+    }
+    const badge = document.createElement('div');
+    badge.className = 'ach-badge' + (unlocked ? ' unlocked' : '');
+    badge.textContent = (unlocked ? '★ ' : '☆ ') + a.label;
+    area.appendChild(badge);
+  });
+}
+
+// ===================== EVENTS =====================
+function addEvent(text, type='neutral') {
+  const now = new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+  state.events.unshift({ text, type, time: timeStr });
+  if (state.events.length > 20) state.events.pop();
+  renderEvents();
+}
+
+function renderEvents() {
+  const list = document.getElementById('events-list');
+  list.innerHTML = '';
+  state.events.forEach(ev => {
+    const item = document.createElement('div');
+    item.className = 'event-item ' + ev.type;
+    item.innerHTML = `<div class="ev-time">${ev.time}</div>${ev.text}`;
+    list.appendChild(item);
+  });
+}
+
+// ===================== NEWS TICKER =====================
+function buildTicker() {
+  const el = document.getElementById('ticker-inner');
+  const shuffled = [...NEWS].sort(() => Math.random()-0.5);
+  el.textContent = shuffled.map(n => '◆ ' + n.text).join('   ');
+}
+buildTicker();
+setInterval(buildTicker, 65000);
+
+// ===================== RANDOM EVENTS =====================
+const randomEvents = [
+  () => { const b = BUILDINGS[Math.floor(Math.random()*3)]; const bonus = Math.floor(state.vps * 30 + 50); state.votes += bonus; state.totalVotes += bonus; addEvent('🎉 Spontán tüntetés! +' + fmt(bonus) + ' szavazat', 'good'); },
+  () => { const loss = Math.floor(state.votes * 0.05 + 10); state.votes = Math.max(0, state.votes - loss); addEvent('😤 Botrány! -' + fmt(loss) + ' szavazat', 'bad'); },
+  () => { state.clickPower *= 1.5; setTimeout(()=>{ state.clickPower /= 1.5; }, 15000); addEvent('⚡ Viral pillanat! 15mp: 1.5x kattintás erő!', 'good'); },
+  () => { addEvent(NEWS[Math.floor(Math.random()*NEWS.length)].text, 'neutral'); },
+  () => { const bonus = Math.floor(state.vps * 60 + 100); state.votes += bonus; state.totalVotes += bonus; addEvent('🗳 Sikeres kampányrendezvény! +' + fmt(bonus) + ' szavazat', 'good'); },
+];
+
+setInterval(() => {
+  if (Math.random() < 0.3 && state.totalVotes > 10) {
+    randomEvents[Math.floor(Math.random() * randomEvents.length)]();
+    renderTick();
+  }
+}, 8000);
+
+// ===================== GAME LOOP =====================
+let lastTick = Date.now();
+function gameTick() {
+  const now = Date.now();
+  const dt = (now - lastTick) / 1000;
+  lastTick = now;
+  const gain = state.vps * dt;
+  state.votes += gain;
+  state.totalVotes += gain;
+  renderTick();
+  requestAnimationFrame(gameTick);
+}
+
+// ===================== INIT =====================
+calcVps();
+renderAll();
+addEvent('Üdvözöljük a Magyar Politika Idle-ban! 🇭🇺', 'good');
+gameTick();
+</script>
+</body>
+</html>
